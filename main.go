@@ -9,18 +9,19 @@ import (
 func main() {
 	// CLI parsing
 	runAll := flag.Bool("all", false, "run all challenges")
-	setCmd := flag.Int("set", 0, "run a challenge from this set or all challenges from this set if --challenge is not also specified")
-	chlCmd := flag.Int("challenge", 0, "run this challenge from the set")
+	setCmd := flag.Int("set", 0, "run all the challenges from this set")
+	chlCmd := flag.Int("challenge", 0, "run just this challenge")
 
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "go run %s [--all|--set n (--challenge m)]:\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "%s [--all | --set n | --challenge m]:\n", os.Args[0])
 		flag.PrintDefaults()
 	}
 
 	flag.Parse()
 
 	// No flags set
-	if !*runAll && *setCmd == 0 && *chlCmd == 0 {
+	if len(os.Args) == 0 {
+		fmt.Println(os.Args)
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -33,7 +34,6 @@ func main() {
 
 	// Each challenge is solved in a function and we manage those functions in
 	// a slice of func slices.
-	sets := make([][]func(), 8)
 	set1 := []func(){
 		s1c1,
 		s1c2,
@@ -45,23 +45,40 @@ func main() {
 		s1c8,
 	}
 
-	sets[0] = set1
+	set2 := []func(){
+		s2c9,
+		s2c10,
+	}
 
-	// Execute the challenges specified on the command line.
+	sets := [][]func(){set1, set2}
+
+	// Execute the challenges specified on the command line. The default go
+	// command line parsing library is rather pathetic, but I don't want code
+	// something more elaborate or use a third party package so this will have
+	// to suffice.
 	if *runAll {
 		for _, s := range sets {
 			for _, c := range s {
 				c()
 			}
 		}
-	} else {
+	} else if *setCmd != 0 {
+		if *setCmd > len(sets) {
+			fmt.Println("set must be between 1 and", len(sets))
+			os.Exit(1)
+		}
 		theSet := sets[*setCmd-1]
-		if *chlCmd == 0 {
-			for _, c := range theSet {
-				c()
+		for _, c := range theSet {
+			c()
+		}
+	} else if *chlCmd != 0 {
+		setStart := 0
+		for i, s := range sets {
+			if *chlCmd <= setStart + len(sets[i]) {
+				s[*chlCmd-1-setStart]()
+				break
 			}
-		} else {
-			sets[*setCmd-1][*chlCmd-1]()
+			setStart = len(sets[i])
 		}
 	}
 }

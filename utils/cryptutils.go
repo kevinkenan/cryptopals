@@ -2,6 +2,7 @@ package cryptopals
 
 import (
 	// "bytes"
+	"crypto/aes"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
@@ -13,6 +14,113 @@ import (
 func stopTheComplainingAboutFmt() {
 	fmt.Println("")
 }
+
+
+func Padding(in []byte, size int) []byte {
+	padLen := size - (len(in) % size)
+	padding := make([]byte, padLen)
+	for i, _ := range padding {
+		padding[i] = byte(padLen)
+	}
+	return append(in, padding...)
+}
+
+
+func EncryptAESwithECB(plaintext, key []byte) ([]byte, error) {
+	// Create the cipher with the key.
+	cipher, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	// Encrypt each block of the plaintext.
+	blockCount := len(plaintext) / aes.BlockSize
+	ciphertext := make([]byte, blockCount*16)
+	for i := 0; i < blockCount; i++ {
+		blockStart := i * aes.BlockSize
+		blockEnd := (i + 1) * aes.BlockSize
+		cipher.Encrypt(ciphertext[blockStart:blockEnd], plaintext[blockStart:blockEnd])
+	}
+
+	return ciphertext, nil
+}
+
+
+func DecryptAESwithECB(ciphertext, key []byte) ([]byte, error) {
+	// Create the cipher with the key.
+	cipher, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	// Decrypt each block of the ciphertext.
+	blockCount := len(ciphertext) / aes.BlockSize
+	cleartext := make([]byte, blockCount*aes.BlockSize)
+	for i := 0; i < blockCount; i++ {
+		blockStart := i * aes.BlockSize
+		blockEnd := (i + 1) * aes.BlockSize
+		cipher.Decrypt(cleartext[blockStart:blockEnd], ciphertext[blockStart:blockEnd])
+	}
+
+	return cleartext, nil
+}
+
+
+func EncryptAESwithCBC(plaintext, iv, key []byte) ([]byte, error) {
+	// Create the cipher with the key.
+	cipher, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	// Encrypt each block of the plaintext.
+	blockCount := len(plaintext) / aes.BlockSize
+	ciphertext := make([]byte, blockCount*aes.BlockSize)
+	cipherBlock := iv
+	for i := 0; i < blockCount; i++ {
+		blockStart := i * aes.BlockSize
+		blockEnd := (i + 1) * aes.BlockSize
+
+		// Mix in the cipherblock by XORing it with the plaintext
+		for i, x := range plaintext[blockStart:blockEnd] {
+			plaintext[blockStart+i] = x ^ cipherBlock[i]
+		}
+
+		// Encrypt the block.
+		cipher.Encrypt(ciphertext[blockStart:blockEnd], plaintext[blockStart:blockEnd])
+
+		// The resulting encrypted block is the new cipherblock
+		cipherBlock = ciphertext[blockStart:blockEnd]
+	}
+
+	return ciphertext, nil
+}
+
+
+func DecryptAESwithCBC(ciphertext, iv, key []byte) ([]byte, error) {
+	// Create the cipher with the key.
+	cipher, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	// Decrypt each block of the ciphertext.
+	blockCount := len(ciphertext) / aes.BlockSize
+	cleartext := make([]byte, blockCount*aes.BlockSize)
+	cipherBlock := iv
+	for i := 0; i < blockCount; i++ {
+		blockStart := i * aes.BlockSize
+		blockEnd := (i + 1) * aes.BlockSize
+		cipher.Decrypt(cleartext[blockStart:blockEnd], ciphertext[blockStart:blockEnd])
+		for i, x := range cleartext[blockStart:blockEnd] {
+			cleartext[blockStart+i] = x ^ cipherBlock[i]
+		}
+		cipherBlock = ciphertext[blockStart:blockEnd]
+	}
+
+	return cleartext, nil
+}
+
 
 func HexStringToBase64(hs string) (string, error) {
 	data, err := hex.DecodeString(hs)

@@ -1,19 +1,25 @@
 package main
 
 import (
+	// "crypto/aes"
+	// "encoding/base64"
+	"fmt"
 	"crypto/aes"
 	"encoding/base64"
-	"fmt"
 	"io/ioutil"
 
 	"github.com/kevinkenan/cryptopals/utils"
 )
 
-func s1c7() {
-	fmt.Println("Set 1, Challenge 7")
+func s2c10() {
+	fmt.Println("Set 2, Challenge 10")
+
+	// iv is 16 bytes of 0x00
+	iv := make([]byte, 16)
+	key := []byte("YELLOW SUBMARINE")
 
 	// Read in test data
-	fileContent, err := ioutil.ReadFile("s1c7data.txt")
+	fileContent, err := ioutil.ReadFile("s2c10data.txt")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -31,8 +37,7 @@ func s1c7() {
 	}
 
 	// Decrypt.
-	key := []byte("YELLOW SUBMARINE")
-	cleartext, err := cryptopals.DecryptAESwithECB(ciphertext, key)
+	cleartext, err := cryptopals.DecryptAESwithCBC(ciphertext, iv, key)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -40,12 +45,12 @@ func s1c7() {
 	// Print the result
 	exp := "I'm back and I'm"
 	if string(cleartext[:16]) == exp {
-		fmt.Println("  Success")
+		fmt.Printf("  Success: %v...\n", string(cleartext[:33]))
 	} else {
 		fmt.Println("  Failure")
 	}
-	// fmt.Printf("  Decrypted %d blocks\n", blockCount)
-	fmt.Printf("  Cleartext: %v...\n", string(cleartext[:16]))
+
+	// fmt.Printf("  Cleartext: %v...\n", string(cleartext[:16]))
 
 	// Uncomment the next line if you want to see the entire plaintext by Vanilla Ice
 	// fmt.Println(string(cleartext))
