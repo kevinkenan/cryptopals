@@ -16,6 +16,28 @@ func stopTheComplainingAboutFmt() {
 }
 
 
+func DetectAESMode(ciphertext []byte) string {
+	// We use the blockSet map as a poor man's set.
+	blockSet := make(map[string]int)
+	blockCount := len(ciphertext) / aes.BlockSize
+	for i := 0; i < blockCount; i++ {
+		block := hex.EncodeToString(ciphertext[i*aes.BlockSize : (i+1)*aes.BlockSize])
+		blockSet[block] = 0
+	}
+
+	// If the length of the map is less than the number of blocks, then at
+	// least one of the blocks was duplicated.
+	var encryptionType string
+	if len(blockSet) != blockCount {
+		encryptionType = "ECB"
+	} else {
+		encryptionType = "CBC"
+	}
+
+	return encryptionType
+}
+
+
 func Padding(in []byte, size int) []byte {
 	padLen := size - (len(in) % size)
 	padding := make([]byte, padLen)

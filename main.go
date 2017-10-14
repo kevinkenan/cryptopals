@@ -48,6 +48,8 @@ func main() {
 	set2 := []func(){
 		s2c9,
 		s2c10,
+		s2c11,
+		s2c12,
 	}
 
 	sets := [][]func(){set1, set2}
