@@ -31,8 +31,6 @@ func s2c12() {
 
 	// Create an encryption oracle with the new key and mysterytext.
 	o := oracle{key, mysterytext}
-	// o = oracle{key, []byte("12345678901234567")}
-	// o = oracle{key, []byte("1234")}
 
 	// Find the blockSize
 	blockSize, err := findBlockSize(o)

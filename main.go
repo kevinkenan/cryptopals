@@ -34,24 +34,8 @@ func main() {
 
 	// Each challenge is solved in a function and we manage those functions in
 	// a slice of func slices.
-	set1 := []func(){
-		s1c1,
-		s1c2,
-		s1c3,
-		s1c4,
-		s1c5,
-		s1c6,
-		s1c7,
-		s1c8,
-	}
-
-	set2 := []func(){
-		s2c9,
-		s2c10,
-		s2c11,
-		s2c12,
-	}
-
+	set1 := []func(){s1c1, s1c2, s1c3, s1c4, s1c5, s1c6, s1c7, s1c8}
+	set2 := []func(){s2c9, s2c10, s2c11, s2c12, s2c13}
 	sets := [][]func(){set1, set2}
 
 	// Execute the challenges specified on the command line. The default go

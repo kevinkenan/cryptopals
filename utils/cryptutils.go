@@ -84,6 +84,10 @@ func DecryptAESwithECB(ciphertext, key []byte) ([]byte, error) {
 		cipher.Decrypt(cleartext[blockStart:blockEnd], ciphertext[blockStart:blockEnd])
 	}
 
+	// Discard padding.
+	p := cleartext[len(cleartext)-1]
+	cleartext = cleartext[0:len(cleartext)-int(p)]
+
 	return cleartext, nil
 }
 
