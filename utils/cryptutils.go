@@ -9,10 +9,91 @@ import (
 	"fmt"
 	"math/bits"
 	"sort"
+
+	"github.com/mitchellh/colorstring"
 )
 
 func stopTheComplainingAboutFmt() {
 	fmt.Println("")
+}
+
+func PrintSuccess(s string) {
+	if len(s) != 0 {
+		colorstring.Printf("  [bold][green]Success[reset]: %#v\n", s)
+	} else {
+		colorstring.Println("  [bold][green]Success")
+	}
+}
+
+func PrintFailure(s string) {
+	if len(s) != 0 {
+		colorstring.Printf("  [bold][red]Failure[reset]: %#v\n", s)
+	} else {
+		colorstring.Println("  [bold][red]Failure")
+	}
+}
+
+func StripPadding(text []byte, blockSize int) ([]byte, error) {
+	if len(text)%blockSize != 0 {
+		return nil, errors.New("Input not a multiple of blockSize")
+	}
+
+	lastByte := int(text[len(text)-1])
+	if lastByte == 0 || lastByte > 16 {
+		return nil, errors.New("Invalid padding")
+	}
+
+	blockCount := len(text)/blockSize
+	lastBlock := text[(blockCount-1)*blockSize:blockCount*blockSize]
+	for i := blockSize-lastByte; i < 16; i++ {
+		if int(lastBlock[i]) != lastByte {
+			return nil, errors.New("Wrong number of padding bytes")
+		}
+	}
+
+	return text[:len(text)-lastByte], nil
+}
+
+
+func PrintBlocks(b []byte, blockSize int) {
+	blockCount := len(b)/blockSize
+	for i := 0; i < blockCount; i++ {
+		fmt.Println(b[i*blockSize:(i+1)*blockSize])
+	}
+	if len(b) > blockSize*blockCount {
+		fmt.Println(b[blockCount*blockSize:])		
+	}
+	fmt.Println("")
+}
+
+
+func PrintHexBlocks(b []byte, blockSize int) {
+	blockCount := len(b)/blockSize
+	for i := 0; i < blockCount; i++ {
+		s := b[i*blockSize:(i+1)*blockSize]
+		fmt.Printf("%03v: [", i)
+		for j := 0; j < blockSize-1; j++ {
+			fmt.Printf("%02x ", s[j])
+		}
+		fmt.Printf("%02x]\n", s[blockSize-1])
+	}
+	// Print last block
+	if len(b) > blockSize*blockCount {
+		s := b[blockCount*blockSize:]
+		fmt.Printf("%03v: [", blockCount)
+		for j := 0; j < len(s)-1; j++ {
+			fmt.Printf("%02x ", s[j])
+		}
+		fmt.Printf("%02x]\n", s[len(s)-1])
+		// fmt.Printf(b[blockCount*blockSize:])
+	}
+	fmt.Println("")
+}
+
+
+func GetBlock(b []byte, c int, blockSize int) ([]byte) {
+	// Zero based.
+	return b[(c)*blockSize:(c+1)*blockSize]
 }
 
 
@@ -144,7 +225,12 @@ func DecryptAESwithCBC(ciphertext, iv, key []byte) ([]byte, error) {
 		cipherBlock = ciphertext[blockStart:blockEnd]
 	}
 
-	return cleartext, nil
+	unpaddedCleartext, _ := StripPadding(cleartext, aes.BlockSize)
+	if err != nil {
+		return nil, err
+	}
+
+	return unpaddedCleartext, nil
 }
 
 

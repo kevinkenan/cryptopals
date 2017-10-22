@@ -24,7 +24,7 @@ func s1c2() {
 	// Check to see if the bytes of the xor match expectation
 	exp, _ := hex.DecodeString("746865206b696420646f6e277420706c6179")
 	if bytes.Compare(out, exp) == 0 {
-		fmt.Println("  Success: ", hex.EncodeToString(out))
+		cryptopals.PrintSuccess(hex.EncodeToString(out))
 	} else {
 		fmt.Println("  Failure: ", hex.EncodeToString(out))
 	}

@@ -116,9 +116,9 @@ func s1c6() {
 	// Print the result
 	exp := "Terminator X: Bring the noise"
 	if bestKey == exp {
-		fmt.Println("  Success")
+		cryptopals.PrintSuccess("")
 	} else {
-		fmt.Println("  Failure")
+		cryptopals.PrintFailure("")
 	}
 	fmt.Printf("  Key: '%v'\n", finalScores[0].Key)
 	fmt.Println("  Keys tested:", keysTested)

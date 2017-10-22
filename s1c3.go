@@ -45,9 +45,9 @@ func s1c3() {
 	// Check to see if the output with lowest score is the expected plaintext
 	t := scores[0]
 	if string(t.Text) == "Cooking MC's like a pound of bacon" {
-		fmt.Println("  Success")
+		cryptopals.PrintSuccess("")
 	} else {
-		fmt.Println("  Failure")
+		cryptopals.PrintFailure("")
 	}
 
 	fmt.Println("  Score:", t.Score)

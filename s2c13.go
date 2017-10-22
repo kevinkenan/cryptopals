@@ -62,9 +62,9 @@ func s2c13() {
 	profile := parseProfileString(s)
 
 	if profile.role == "admin" {
-		fmt.Println("  Success:", profile.role)
+		cryptopals.PrintSuccess(profile.role)
 	} else {
-		fmt.Println("  Failure")
+		cryptopals.PrintFailure("")
 	}
 }
 

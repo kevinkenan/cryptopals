@@ -6,6 +6,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+
+	"github.com/kevinkenan/cryptopals/utils"
 )
 
 func s1c8() {
@@ -45,8 +47,8 @@ func s1c8() {
 	// Print the result
 	exp := 133
 	if lineNum == exp {
-		fmt.Println("  Success: ECB encrypted line: ", lineNum)
+		cryptopals.PrintSuccess(fmt.Sprintf("ECB encrypted line: %v", lineNum))
 	} else {
-		fmt.Println("  Failure")
+		cryptopals.PrintFailure("")
 	}
 }

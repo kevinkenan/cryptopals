@@ -40,9 +40,9 @@ func s1c7() {
 	// Print the result
 	exp := "I'm back and I'm"
 	if string(cleartext[:16]) == exp {
-		fmt.Println("  Success")
+		cryptopals.PrintSuccess("")
 	} else {
-		fmt.Println("  Failure")
+		cryptopals.PrintFailure("")
 	}
 	// fmt.Printf("  Decrypted %d blocks\n", blockCount)
 	fmt.Printf("  Cleartext: %v...\n", string(cleartext[:16]))

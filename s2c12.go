@@ -159,9 +159,9 @@ func s2c12() {
 	}
 
 	if bytes.Equal(foundtext, mysterytext) {;
-		fmt.Printf("  Success: %v...\n", string(foundtext[0:15]))
+		cryptopals.PrintSuccess(string(foundtext[0:15])+"...")
 	} else {
-		fmt.Println("  Failure")
+		cryptopals.PrintFailure("")
 	}
 	fmt.Println("  Block size:", blockSize)
 	fmt.Println("  Mode:", mode)

@@ -21,8 +21,8 @@ func s1c1() {
 	// Check to see if the conversion matches expectation
 	exp := "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t"
 	if enc == exp {
-		fmt.Println("  Success: ", exp)
+		cryptopals.PrintSuccess(exp)
 	} else {
-		fmt.Println("  Failure: ", exp)
+		cryptopals.PrintFailure(exp)
 	}
 }

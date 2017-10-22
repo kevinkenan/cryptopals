@@ -84,9 +84,9 @@ func s2c11() {
 
 	// Print the result.
 	if detectedMode == mode {
-		fmt.Println("  Success")
+		cryptopals.PrintSuccess("")
 	} else {
-		fmt.Println("  Failure")
+		cryptopals.PrintFailure("")
 	}
 
     fmt.Println("  Using:", mode)

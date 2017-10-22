@@ -43,9 +43,9 @@ func s2c10() {
 	// Print the result
 	exp := "I'm back and I'm"
 	if string(cleartext[:16]) == exp {
-		fmt.Printf("  Success: %v...\n", string(cleartext[:33]))
+		cryptopals.PrintSuccess(string(cleartext[:33])+"...")
 	} else {
-		fmt.Println("  Failure")
+		cryptopals.PrintFailure("")
 	}
 
 	// fmt.Printf("  Cleartext: %v...\n", string(cleartext[:16]))

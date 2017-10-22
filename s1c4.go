@@ -64,9 +64,9 @@ func s1c4() {
 
 	// Check to see if we have the expected plaintext
 	if plaintext == "Now that the party is jumping" {
-		fmt.Println("  Success")
+		cryptopals.PrintSuccess("")
 	} else {
-		fmt.Println("  Failure")
+		cryptopals.PrintFailure("")
 	}
 
 	fmt.Println("  Score:", bestScore)
