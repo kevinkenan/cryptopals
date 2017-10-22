@@ -2,10 +2,10 @@ package main
 
 import (
 	"bytes"
-	"fmt"
-	"errors"
-	"strings"
 	"crypto/rand"
+	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/kevinkenan/cryptopals/utils"
 )
@@ -38,10 +38,10 @@ func s2c13() {
 	//   email=test@1234.
 	//   admin&uid=19&rol
 	//   e=user
-	// We want the 1st and 2nd blocks. 
+	// We want the 1st and 2nd blocks.
 	emailBlock := b[0:16]
 	adminBlock := b[16:32]
-	s, _ := o.decryptProfileCookie(bytes.Join([][]byte{adminBlock,fullBlockPadding}, []byte{}))
+	s, _ := o.decryptProfileCookie(bytes.Join([][]byte{adminBlock, fullBlockPadding}, []byte{}))
 
 	// Get a block that ends with "role=" and wraps up the email address.
 	b, _ = o.encryptedProfileFor("xxxxxxxxxxcom")

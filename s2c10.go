@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"crypto/aes"
 	"encoding/base64"
+	"fmt"
 	"io/ioutil"
 
 	"github.com/kevinkenan/cryptopals/utils"
@@ -43,7 +43,7 @@ func s2c10() {
 	// Print the result
 	exp := "I'm back and I'm"
 	if string(cleartext[:16]) == exp {
-		cryptopals.PrintSuccess(string(cleartext[:33])+"...")
+		cryptopals.PrintSuccess(string(cleartext[:33]) + "...")
 	} else {
 		cryptopals.PrintFailure("")
 	}

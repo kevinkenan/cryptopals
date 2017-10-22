@@ -2,9 +2,9 @@ package main
 
 import (
 	"bytes"
+	"crypto/rand"
 	"fmt"
 	"math/big"
-	"crypto/rand"
 
 	"github.com/kevinkenan/cryptopals/utils"
 )
@@ -24,7 +24,7 @@ func s2c11() {
 
 	// Generate random bytes to prepend to the plaintext.
 	preCountBig, _ := rand.Int(rand.Reader, big.NewInt(6))
-	preCount := 5+preCountBig.Int64()
+	preCount := 5 + preCountBig.Int64()
 	preBytes := make([]byte, preCount)
 	_, err = rand.Read(preBytes)
 	if err != nil {
@@ -34,7 +34,7 @@ func s2c11() {
 
 	// Generate random bytes to append to the plaintext.
 	postCountBig, _ := rand.Int(rand.Reader, big.NewInt(6))
-	postCount := 5+postCountBig.Int64()
+	postCount := 5 + postCountBig.Int64()
 	postBytes := make([]byte, postCount)
 	_, err = rand.Read(postBytes)
 	if err != nil {
@@ -89,6 +89,6 @@ func s2c11() {
 		cryptopals.PrintFailure("")
 	}
 
-    fmt.Println("  Using:", mode)
+	fmt.Println("  Using:", mode)
 	fmt.Println("  Detected:", detectedMode)
 }

@@ -1,9 +1,9 @@
 package main
 
 import (
+	"crypto/rand"
 	"fmt"
 	"net/url"
-	"crypto/rand"
 	"strings"
 
 	"github.com/kevinkenan/cryptopals/utils"
@@ -33,7 +33,7 @@ func s2c16() {
 
 	// The input data is crafted to produce these blocks (note the URL query
 	// escape characters):
-	// 
+	//
 	//   comment1%3Dcooki
 	//   ng+MCs%3Buserdat
 	//   a%3Dxxxxxxxxxxxx
@@ -54,7 +54,7 @@ func s2c16() {
 
 	// The strategy is to flip bits in the fourth block of ciphertext,
 	// starting at position 49, so that the fifth block becomes:
-	// 
+	//
 	//   x%3Badmin%3Dtrue
 	//
 	// Since we know that the fourth block consists only of 'x' (hex 0x78)

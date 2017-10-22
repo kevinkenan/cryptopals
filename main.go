@@ -36,7 +36,8 @@ func main() {
 	// a slice of func slices.
 	set1 := []func(){s1c1, s1c2, s1c3, s1c4, s1c5, s1c6, s1c7, s1c8}
 	set2 := []func(){s2c9, s2c10, s2c11, s2c12, s2c13, s2c14, s2c15, s2c16}
-	sets := [][]func(){set1, set2}
+	set3 := []func(){s3c17}
+	sets := [][]func(){set1, set2, set3}
 
 	// Execute the challenges specified on the command line. The default go
 	// command line parsing library is rather pathetic, but I don't want code
@@ -60,7 +61,7 @@ func main() {
 	} else if *chlCmd != 0 {
 		setStart := 0
 		for i, s := range sets {
-			if *chlCmd <= setStart + len(sets[i]) {
+			if *chlCmd <= setStart+len(sets[i]) {
 				s[*chlCmd-1-setStart]()
 				break
 			}

@@ -58,9 +58,9 @@ func s2c12() {
 	}
 
 	// blockCount is the number of blocks required to encrypt the mysterytext.
-	blockCount := len(ciphertext)/blockSize
+	blockCount := len(ciphertext) / blockSize
 
-	// attacktext holds the plaintext we use to attack the oracle. We always 
+	// attacktext holds the plaintext we use to attack the oracle. We always
 	// know all the bytes of attacktext except the last one, which is the
 	// byte we attempting to discover.
 	attacktext := make([]byte, blockCount*blockSize)
@@ -69,8 +69,8 @@ func s2c12() {
 	// encrypting the attack text. Since this block contains the encrypted
 	// value of the unknown, last byte of the attacktext, it is the only block
 	// we are really interested in.
-	attackWindowStart := (blockCount-1)*blockSize
-	attackWindowEnd := blockCount*blockSize
+	attackWindowStart := (blockCount - 1) * blockSize
+	attackWindowEnd := blockCount * blockSize
 
 	// The probe allows us to control what bytes are in the attack window.
 	// Since we know all of the bytes in probe (they're all 'A's), we can
@@ -158,8 +158,8 @@ func s2c12() {
 		}
 	}
 
-	if bytes.Equal(foundtext, mysterytext) {;
-		cryptopals.PrintSuccess(string(foundtext[0:15])+"...")
+	if bytes.Equal(foundtext, mysterytext) {
+		cryptopals.PrintSuccess(string(foundtext[0:15]) + "...")
 	} else {
 		cryptopals.PrintFailure("")
 	}
@@ -177,7 +177,6 @@ func identicalBytesInWindow(a, b []byte, start, end int) bool {
 		return false
 	}
 }
-
 
 func findMode(o oracle, blockSize int) (string, error) {
 	plaintext := bytes.Repeat([]byte("A"), 2*blockSize)
@@ -214,7 +213,7 @@ func findBlockSize(o oracle) (int, error) {
 }
 
 type oracle struct {
-	key []byte
+	key          []byte
 	trailingtext []byte
 }
 
@@ -229,7 +228,7 @@ func (o oracle) getEncryptedData(plaintext []byte) ([]byte, error) {
 
 // This function exists to give visibility into how the algorithm works. Given
 // a plaintext, it returns exactly what the oracle would encrypt.
-func (o oracle) getText(plaintext []byte) ([]byte) {
+func (o oracle) getText(plaintext []byte) []byte {
 	newtext := bytes.Join([][]byte{plaintext, o.trailingtext}, []byte{})
 	return cryptopals.Padding(newtext, 16)
 }

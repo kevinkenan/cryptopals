@@ -2,9 +2,9 @@ package main
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"crypto/rand"
 
 	"github.com/kevinkenan/cryptopals/utils"
 )
@@ -88,9 +88,9 @@ func s2c14() {
 	}
 
 	// blockCount is the number of blocks required to encrypt just the mysterytext.
-	blockCount := (len(ciphertext)/blockSize)-prefixBlocks
+	blockCount := (len(ciphertext) / blockSize) - prefixBlocks
 
-	// attacktext holds the plaintext we use to attack the oracle. We always 
+	// attacktext holds the plaintext we use to attack the oracle. We always
 	// know all the bytes of attacktext except the last one, which is the
 	// byte we attempting to discover.
 	attacktext := make([]byte, prefixPadding+(blockCount*blockSize))
@@ -99,8 +99,8 @@ func s2c14() {
 	// encrypting the attack text. Since this block contains the encrypted
 	// value of the unknown, last byte of the attacktext, it is the only block
 	// we are really interested in.
-	attackWindowStart := ((prefixBlocks+blockCount-1)*blockSize)
-	attackWindowEnd := ((prefixBlocks+blockCount)*blockSize)
+	attackWindowStart := ((prefixBlocks + blockCount - 1) * blockSize)
+	attackWindowEnd := ((prefixBlocks + blockCount) * blockSize)
 
 	// The probe allows us to control what bytes are in the attack window.
 	// Since we know all of the bytes in probe (they're all 'A's), we can
@@ -194,7 +194,7 @@ func s2c14() {
 	}
 
 	if bytes.Equal(foundtext, mysterytext) {
-		cryptopals.PrintSuccess(string(foundtext[0:15])+"...")
+		cryptopals.PrintSuccess(string(foundtext[0:15]) + "...")
 	} else {
 		cryptopals.PrintFailure("")
 	}
@@ -204,7 +204,6 @@ func s2c14() {
 	// Uncomment to see the full discovered mysterytext
 	// fmt.Println(string(foundtext))
 }
-
 
 func c14getPrefixPadding(o c14oracle, blockSize int) (int, int, error) {
 	// Find the number of blocks used by the prefix. testText is long enough
@@ -219,16 +218,16 @@ func c14getPrefixPadding(o c14oracle, blockSize int) (int, int, error) {
 	// Find the identical blocks produced by testtext.
 	pBlock := []byte{}
 	for i := 0; i < len(ciphertext)/blockSize; i++ {
-		block := ciphertext[i*blockSize:(i+1)*blockSize]
+		block := ciphertext[i*blockSize : (i+1)*blockSize]
 		if bytes.Equal(pBlock, block) {
 			if i == 1 {
 				// The oracle doesn't prepend a prefix.
 				return 0, 0, nil
 			}
-			prefixBlockCount = i-1
+			prefixBlockCount = i - 1
 			// lastPrefixBlock is the last block of the prefix plus any
 			// necessary padding. We don't know how much padding...yet.
-			lastPrefixBlock = ciphertext[(i-2)*blockSize:(i-1)*blockSize]
+			lastPrefixBlock = ciphertext[(i-2)*blockSize : (i-1)*blockSize]
 			break
 		} else {
 			pBlock = block
@@ -257,7 +256,6 @@ func c14getPrefixPadding(o c14oracle, blockSize int) (int, int, error) {
 	return prefixPadding, prefixBlockCount, nil
 }
 
-
 func c14identicalBytesInWindow(a, b []byte, start, end int) bool {
 	if bytes.Equal(a[start:end], b[start:end]) {
 		return true
@@ -265,7 +263,6 @@ func c14identicalBytesInWindow(a, b []byte, start, end int) bool {
 		return false
 	}
 }
-
 
 func c14findMode(o c14oracle, blockSize int) (string, error) {
 	plaintext := bytes.Repeat([]byte("A"), 4*blockSize)
@@ -275,7 +272,6 @@ func c14findMode(o c14oracle, blockSize int) (string, error) {
 	}
 	return cryptopals.DetectAESMode(ciphertext), nil
 }
-
 
 func c14findBlockSize(o c14oracle) (int, error) {
 	// Initialize blockSize with the len of the unaltered ciphertext.
@@ -302,11 +298,9 @@ func c14findBlockSize(o c14oracle) (int, error) {
 	return blockSize, nil
 }
 
-
 type c14oracle struct {
 	key, prefix, trailingtext []byte
 }
-
 
 func (o c14oracle) getEncryptedData(plaintext []byte) ([]byte, error) {
 	newtext := bytes.Join([][]byte{o.prefix, plaintext, o.trailingtext}, []byte{})
@@ -317,10 +311,9 @@ func (o c14oracle) getEncryptedData(plaintext []byte) ([]byte, error) {
 	return ciphertext, nil
 }
 
-
 // This function exists to give visibility into how the algorithm works. Given
 // a plaintext, it returns exactly what the oracle would encrypt.
-func (o c14oracle) getText(plaintext []byte) ([]byte) {
+func (o c14oracle) getText(plaintext []byte) []byte {
 	newtext := bytes.Join([][]byte{o.prefix, plaintext, o.trailingtext}, []byte{})
 	return cryptopals.Padding(newtext, 16)
 }
