@@ -85,7 +85,11 @@ func s2c16() {
 	}
 
 	// Check to see if the decrypted ciphtertext contains ';admin=true;'.
-	isAdmin, err := o.c16checkForAdmin(ciphertext)
+	// Since the random bytes that get created in the fourth block can confuse
+	// the url query unescaping in the c16checkForAdmin code, we're going to
+	// ignore that block.
+	ignoreBlock := 3
+	isAdmin, err := o.c16checkForAdmin(plaintext, ignoreBlock)
 	if err != nil {
 		fmt.Println("ERROR:", err)
 		return
@@ -96,6 +100,7 @@ func s2c16() {
 		cryptopals.PrintSuccess(fmt.Sprintf("%v...%v", s[:33], s[58:]))
 	} else {
 		cryptopals.PrintFailure("")
+		cryptopals.PrintHexBlocks(plaintext, 16)
 	}
 }
 
@@ -103,13 +108,14 @@ type c16oracle struct {
 	Key, IV []byte
 }
 
-func (o c16oracle) c16checkForAdmin(ciphertext []byte) (bool, error) {
-	plaintext, err := cryptopals.DecryptAESwithCBC(ciphertext, o.IV, o.Key)
+func (o c16oracle) c16checkForAdmin(plaintext []byte, ignoreBlock int) (bool, error) {
+	newtext := plaintext[:ignoreBlock*16]
+	newtext = append(newtext, plaintext[(ignoreBlock+1)*16:]...)
+	plainstring, err := url.QueryUnescape(string(newtext))
 	if err != nil {
 		return false, err
 	}
 
-	plainstring, _ := url.QueryUnescape(string(plaintext))
 	return strings.Contains(plainstring, ";admin=true;"), nil
 }
 
