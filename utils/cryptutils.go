@@ -33,6 +33,14 @@ func PrintFailure(s string) {
 	}
 }
 
+func PrintError(err error) {
+	if err != nil {
+		colorstring.Printf("  [bold][red]ERROR[reset]: %#s\n", err)
+	} else {
+		colorstring.Println("  [bold][red]ERROR")
+	}
+}
+
 func StripPadding(text []byte, blockSize int) ([]byte, error) {
 	if len(text)%blockSize != 0 {
 		return nil, errors.New("Input not a multiple of blockSize")
@@ -213,6 +221,9 @@ func DecryptAESwithCBC(ciphertext, iv, key []byte) ([]byte, error) {
 
 	// Decrypt each block of the ciphertext.
 	blockCount := len(ciphertext) / aes.BlockSize
+	if blockCount == 0 {
+		return nil, errors.New("Invalid ciphertext")
+	}
 	cleartext := make([]byte, blockCount*aes.BlockSize)
 	cipherBlock := iv
 	for i := 0; i < blockCount; i++ {
@@ -225,10 +236,16 @@ func DecryptAESwithCBC(ciphertext, iv, key []byte) ([]byte, error) {
 		cipherBlock = ciphertext[blockStart:blockEnd]
 	}
 
-	unpaddedCleartext, _ := StripPadding(cleartext, aes.BlockSize)
+	// fmt.Println("cleartext")
+	// PrintHexBlocks(cleartext, 16)
+
+	unpaddedCleartext, err := StripPadding(cleartext, aes.BlockSize)
 	if err != nil {
 		return nil, err
 	}
+
+	// fmt.Println("unpadded")
+	// PrintHexBlocks(unpaddedCleartext, 16)
 
 	return unpaddedCleartext, nil
 }

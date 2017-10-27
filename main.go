@@ -65,7 +65,7 @@ func main() {
 				s[*chlCmd-1-setStart]()
 				break
 			}
-			setStart = len(sets[i])
+			setStart = setStart + len(sets[i])
 		}
 	}
 }
