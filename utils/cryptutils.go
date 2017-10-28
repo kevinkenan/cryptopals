@@ -4,8 +4,10 @@ import (
 	// "bytes"
 	"crypto/aes"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/hex"
 	"errors"
+	"math"
 	"fmt"
 	"math/bits"
 	"sort"
@@ -248,6 +250,71 @@ func DecryptAESwithCBC(ciphertext, iv, key []byte) ([]byte, error) {
 	// PrintHexBlocks(unpaddedCleartext, 16)
 
 	return unpaddedCleartext, nil
+}
+
+
+// This function is used for both encryption and decryption.
+func ApplyAESwithCTR(intext, key, nonce []byte, start uint64) ([]byte, error) {
+	var err error
+	outtext := make([]byte, len(intext))
+
+	// Start the keystream which generates the key bytes.
+	keystream := make(chan keyByte)
+	go keystreamGen(nonce, key, start, keystream)
+
+	// XOR each byte of intext with a byte from the keystream.
+	for i, t := range intext {
+		k := <- keystream
+		if k.Err != nil {
+			return nil, err
+		}
+		outtext[i] = t ^ k.Byte
+	}
+
+	return outtext, nil
+}
+
+
+func keystreamGen(nonce, key []byte, start uint64, c chan keyByte) {
+	inc := start
+    incBuf := make([]byte, 8)
+   	ctr := make([]byte, 16)
+
+	for inc < math.MaxUint64 {
+		// Build the ctr which is a concatenation of the nonce and the
+		// incrementing inc.
+		binary.LittleEndian.PutUint64(incBuf, inc)
+		copy(ctr, nonce)
+		copy(ctr[8:16], incBuf)
+
+		// Generate a block of keystream bytes
+		keystreamBlock, err := EncryptAESwithECB(ctr, key)
+		if err != nil {
+			c <- keyByte{0x00, err}
+		}
+
+		// Send the keystream bytes out the channel one at time.
+		for i := 0; i < 16; i++ {
+			c <- keyByte{keystreamBlock[i], nil}
+		}
+
+		// When we've used all the bytes in a keystream block, increment the
+		// inc variable and continue with the loop to generate a new keystream
+		// block.
+		inc++
+	}
+
+	// We've used all the keystream bytes available with that nonce. Further
+	// use is not advised.
+	c <- keyByte{0x00, errors.New("Keystream exhausted")}
+}
+
+// This struct makes it easy to report on errors from the Go routine. It's not
+// the most efficient way to watch for errors in a routine, but I didn't want
+// to set up another channel for this challenge.
+type keyByte struct {
+	Byte byte
+	Err error 
 }
 
 
