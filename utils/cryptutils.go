@@ -448,3 +448,20 @@ func XorByteArrays(a, b []byte) ([]byte, error) {
 }
 
 var ErrUnequalLengths = errors.New("xor: byte arrays of unequal lengths")
+
+func XorByteStream(a, b []byte) ([]byte, error) {
+	minSize := min(len(a), len(b))
+	out := make([]byte, minSize)
+	for i := 0; i < minSize; i++ {
+		out[i] = a[i] ^ b[i]
+	}
+
+	return out, nil
+}
+
+func min(a, b int) int {
+    if a < b {
+        return a
+    }
+    return b
+}
