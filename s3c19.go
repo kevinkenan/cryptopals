@@ -1,15 +1,15 @@
 package main
 
 import (
-	"sort"
-	"bytes"
 	"bufio"
+	"bytes"
 	"encoding/base64"
 	"fmt"
+	"sort"
 	// "io/ioutil"
-	"os"
 	"crypto/rand"
 	"github.com/kevinkenan/cryptopals/utils"
+	"os"
 )
 
 func s3c19() {
@@ -65,7 +65,6 @@ func s3c19() {
 	}
 
 	guessedKey = make([]byte, longestCiphertext)
-	fmt.Println("key length:", longestCiphertext)
 
 	var counts c19byteCountList
 
@@ -273,7 +272,6 @@ func s3c19() {
 	// Line 37 is "...in his tur". Let's guess that the next letter is 'n'.
 	guessedKey[36] = ciphertexts[37][36] ^ 'n'
 
-
 	// That guess looks good. Uncomment to see.
 	// for _, c := range ciphertexts {
 	// 	g, _ := cryptopals.XorByteStream(c, guessedKey[:37])
@@ -284,7 +282,6 @@ func s3c19() {
 	// "He, too, has been changed in his turn". Given the context, I'm
 	// guessing that the next character is a ','.
 	guessedKey[37] = ciphertexts[37][37] ^ ','
-
 
 	// That guess looks good. Uncomment to see.
 	// for _, c := range ciphertexts {
@@ -301,7 +298,7 @@ func s3c19() {
 			success = false
 			break
 		}
-	}	
+	}
 
 	if success {
 		cryptopals.PrintSuccess("")
@@ -309,7 +306,6 @@ func s3c19() {
 		cryptopals.PrintFailure("")
 	}
 }
-
 
 // Probably a bit overkill, but wanted to write the Add function.
 // Anyways, this type is only used to make the first guess.
@@ -321,9 +317,9 @@ type c19byteCount struct {
 }
 
 // The first 3 implment the sort interface
-func (c c19byteCountList) Len() int { return len(c) }
+func (c c19byteCountList) Len() int           { return len(c) }
 func (c c19byteCountList) Less(i, j int) bool { return c[i].count < c[j].count }
-func (c c19byteCountList) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
+func (c c19byteCountList) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
 func (c *c19byteCountList) Add(b byte) c19byteCountList {
 	// fmt.Println("----")
 	foundByte := false

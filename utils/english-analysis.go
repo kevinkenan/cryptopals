@@ -2,6 +2,7 @@ package cryptopals
 
 import (
 	"math"
+	// "fmt"
 )
 
 var (
@@ -49,10 +50,10 @@ func ScoreText(candidate []byte) float64 {
 	// Count the number of times each letter appears in candidate
 	for _, b := range candidate {
 		if 0x60 < b && b < 0x7B {
-			// Count uppercase characters as lowercase
+			// Count lowercase characters as uppercase
 			counts[b-0x20] = counts[b-0x20] + 1
 		} else {
-			// Count lower case letters
+			// Count uppercase letters and everything else
 			counts[b] = counts[b] + 1
 		}
 	}
@@ -62,7 +63,20 @@ func ScoreText(candidate []byte) float64 {
 	size := len(candidate)
 	diff := 0.0
 	for k, v := range counts {
-		diff += math.Abs(letterFreq[k] - float64(v)/float64(size))
+		if (0x40 < k && k < 0x5B) || (0x60 < k && k < 0x7B) || k == 0x20 {
+			// Typical characters in english. 
+			diff += math.Abs(letterFreq[k] - float64(v)/float64(size))
+		} else if k >20 || k == 0x9 || k == 0xA || k == 0xD {
+			// Other possible english characters, including, tabs, line feeds,
+			// and carriage returns. I don't have data on their frequencies,
+			// but I don't want them penalized with the other control
+			// characters. The value is a guess; any smaller and the
+			// algorithm isn't as accurate.
+			diff += .1
+		} else {
+			// Non-printable control characters are penalized. 
+			diff += 0.2
+		}
 	}
 
 	// Return the average of the differences.
