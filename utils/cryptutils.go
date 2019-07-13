@@ -450,6 +450,7 @@ func min(a, b int) int {
 	return b
 }
 
+// Mersenne Twister (MT19937)
 func RandomGen(seed uint32, ch chan uint32) {
 	// Values needed by the algorithm.
 	u := uint32(11)
