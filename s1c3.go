@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/kevinkenan/cryptopals/utils"
+	cryptopals "github.com/kevinkenan/cryptopals/utils"
 )
 
 func s1c3() {
@@ -31,7 +31,7 @@ func s1c3() {
 		}
 
 		// Score the resulting plaintext on how much it looks like english
-		scores[i] = cryptopals.ScoredText{string(plaintext), cryptopals.ScoreText(plaintext), string(k)}
+		scores[i] = cryptopals.ScoredText{Text: string(plaintext), Score: cryptopals.ScoreText(plaintext), Key: string(k)}
 	}
 
 	// Low scores indicate that the decrypted text looks more like english

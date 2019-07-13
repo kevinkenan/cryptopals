@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kevinkenan/cryptopals/utils"
+	cryptopals "github.com/kevinkenan/cryptopals/utils"
 )
 
 func s1c8() {
@@ -17,7 +17,7 @@ func s1c8() {
 
 	f, err := os.Open("s1c8data.txt")
 	if err != nil {
-		fmt.Printf("Error:", err)
+		fmt.Print("Error:", err)
 	}
 	defer f.Close()
 

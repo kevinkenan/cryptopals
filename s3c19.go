@@ -6,10 +6,12 @@ import (
 	"encoding/base64"
 	"fmt"
 	"sort"
+
 	// "io/ioutil"
 	"crypto/rand"
-	"github.com/kevinkenan/cryptopals/utils"
 	"os"
+
+	cryptopals "github.com/kevinkenan/cryptopals/utils"
 )
 
 func s3c19() {
@@ -20,7 +22,7 @@ func s3c19() {
 	// Read in test data
 	f, err := os.Open("s3c19data.txt")
 	if err != nil {
-		fmt.Printf("Error:", err)
+		fmt.Print("Error:", err)
 	}
 	defer f.Close()
 

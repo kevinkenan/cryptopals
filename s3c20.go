@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kevinkenan/cryptopals/utils"
+	cryptopals "github.com/kevinkenan/cryptopals/utils"
 )
 
 func s3c20() {
@@ -18,7 +18,7 @@ func s3c20() {
 	// Read in test data
 	f, err := os.Open("s3c20data.txt")
 	if err != nil {
-		fmt.Printf("Error:", err)
+		fmt.Print("Error:", err)
 	}
 	defer f.Close()
 

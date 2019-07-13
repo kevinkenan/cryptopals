@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"sort"
 
-	"github.com/kevinkenan/cryptopals/utils"
+	cryptopals "github.com/kevinkenan/cryptopals/utils"
 )
 
 func s1c6() {
@@ -106,7 +106,7 @@ func s1c6() {
 	finalScores := make(cryptopals.ScoredTextList, len(keyCandidates))
 	for i, k := range keyCandidates {
 		p, _ := cryptopals.RepeatedKeyXor(ciphertext, k)
-		finalScores[i] = cryptopals.ScoredText{string(p), cryptopals.ScoreText(p), string(k)}
+		finalScores[i] = cryptopals.ScoredText{Text: string(p), Score: cryptopals.ScoreText(p), Key: string(k)}
 	}
 
 	// The most likely key is the one that produced the smallest score.
