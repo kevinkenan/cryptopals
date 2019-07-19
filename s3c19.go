@@ -3,13 +3,11 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"sort"
-
-	// "io/ioutil"
-	"crypto/rand"
 	"os"
+	"sort"
 
 	cryptopals "github.com/kevinkenan/cryptopals/utils"
 )
