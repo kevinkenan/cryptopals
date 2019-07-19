@@ -453,20 +453,20 @@ func min(a, b int) int {
 // Mersenne Twister (MT19937)
 
 // Constants
-const mt_w = uint32(32)
-const mt_n = uint32(624)
-const mt_m = uint32(397)
-const mt_r = uint32(31)
-const mt_a = uint32(0x9908B0DF)
-const mt_u = uint32(11)
-const mt_d = uint32(0xFFFFFFFF)
-const mt_s = uint32(7)
-const mt_b = uint32(0x9D2C5680)
-const mt_t = uint32(15)
-const mt_c = uint32(0xEFC60000)
-const mt_l = uint32(18)
-const mt_f = uint32(1812433253)
-const lowerMask = uint32((1 << mt_r) - 1) // 0x7fffffff
+const MT_w = uint32(32)
+const MT_n = uint32(624)
+const MT_m = uint32(397)
+const MT_r = uint32(31)
+const MT_a = uint32(0x9908B0DF)
+const MT_u = uint32(11)
+const MT_d = uint32(0xFFFFFFFF)
+const MT_s = uint32(7)
+const MT_b = uint32(0x9D2C5680)
+const MT_t = uint32(15)
+const MT_c = uint32(0xEFC60000)
+const MT_l = uint32(18)
+const MT_f = uint32(1812433253)
+const lowerMask = uint32((1 << MT_r) - 1) // 0x7fffffff
 const upperMask = uint32(^lowerMask)      // 0x80000000
 
 type mt19937 struct {
@@ -481,7 +481,7 @@ func RandomGen(seed uint32, ch chan uint32) {
 	mt.init(seed)
 
 	for {
-		if mt.index == mt_n {
+		if mt.index == MT_n {
 			_, err := mt.twist()
 			if err != nil {
 				fmt.Println("ERROR:", err)
@@ -489,11 +489,13 @@ func RandomGen(seed uint32, ch chan uint32) {
 			}
 		}
 
+		// temper the output
 		y := mt.state[mt.index]
-		y = y ^ ((y >> mt_u) & mt_d)
-		y = y ^ ((y << mt_s) & mt_b)
-		y = y ^ ((y << mt_t) & mt_c)
-		y = y ^ (y >> mt_l)
+		// fmt.Printf("pretempered: %0x (%d)\n", y, mt.index)
+		y = y ^ ((y >> MT_u) & MT_d)
+		y = y ^ ((y << MT_s) & MT_b)
+		y = y ^ ((y << MT_t) & MT_c)
+		y = y ^ (y >> MT_l)
 		mt.index++
 
 		ch <- y
@@ -506,16 +508,16 @@ func (mt *mt19937) init(seed uint32) {
 		return
 	}
 
-	state := make([]uint32, mt_n)
+	state := make([]uint32, MT_n)
 	state[0] = seed
-	for i := uint32(1); i < mt_n; i++ {
-		state[i] = (mt_f*(state[i-1]^(state[i-1]>>(mt_w-2))) + i)
+	for i := uint32(1); i < MT_n; i++ {
+		state[i] = (MT_f*(state[i-1]^(state[i-1]>>(MT_w-2))) + i)
 	}
 	mt.state = state
 
 	// Point the index to the last element of the state so that
 	// the twist is called before returning any values.
-	mt.index = mt_n
+	mt.index = MT_n
 
 	// Mark it as initialized.
 	mt.initialized = true
@@ -527,15 +529,42 @@ func (mt *mt19937) twist() (uint32, error) {
 		return 0, errors.New("Generator was not seeded")
 	}
 
-	for i := uint32(0); i < mt_n; i++ {
-		x := (mt.state[i] & upperMask) + (mt.state[(i+1)%mt_n] & lowerMask)
+	for i := uint32(0); i < MT_n; i++ {
+		x := (mt.state[i] & upperMask) + (mt.state[(i+1)%MT_n] & lowerMask)
 		xA := x >> 1
 		if (x % 2) != 0 { // lowest bit of x is 1
-			xA = xA ^ mt_a
+			xA = xA ^ MT_a
 		}
-		mt.state[i] = mt.state[(i+mt_m)%mt_n] ^ xA
+		mt.state[i] = mt.state[(i+MT_m)%MT_n] ^ xA
 	}
 	mt.index = 0
 
 	return mt.index, nil
+}
+
+func HackedRandomGen(st []uint32, ch chan uint32) {
+	var mt mt19937
+	mt.state = st
+	mt.index = MT_n
+	mt.initialized = true
+
+	for {
+		if mt.index == MT_n {
+			_, err := mt.twist()
+			if err != nil {
+				fmt.Println("ERROR:", err)
+				return
+			}
+		}
+
+		// temper the output
+		y := mt.state[mt.index]
+		y = y ^ ((y >> MT_u) & MT_d)
+		y = y ^ ((y << MT_s) & MT_b)
+		y = y ^ ((y << MT_t) & MT_c)
+		y = y ^ (y >> MT_l)
+		mt.index++
+
+		ch <- y
+	}
 }
