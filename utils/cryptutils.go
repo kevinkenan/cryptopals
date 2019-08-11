@@ -8,11 +8,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/mitchellh/colorstring"
 	"math"
 	"math/bits"
 	"sort"
-
-	"github.com/mitchellh/colorstring"
 )
 
 func stopTheComplainingAboutFmt() {
@@ -469,45 +468,28 @@ const MT_f = uint32(1812433253)
 const lowerMask = uint32((1 << MT_r) - 1) // 0x7fffffff
 const upperMask = uint32(^lowerMask)      // 0x80000000
 
-type mt19937 struct {
+type MT19937 struct {
 	initialized bool
-	index       uint32   // the index of the next random number to be returned
+	Seed        uint32
+	Index       uint32   // the Index of the next random number to be returned
 	state       []uint32 // the current set of random numbers
+	reseed      bool
 }
 
 func RandomGen(seed uint32, ch chan uint32) {
 	// Initialization
-	var mt mt19937
+	var mt MT19937
 	mt.init(seed)
 
 	for {
-		if mt.index == MT_n {
-			_, err := mt.twist()
-			if err != nil {
-				fmt.Println("ERROR:", err)
-				return
-			}
-		}
-
-		// temper the output
-		y := mt.state[mt.index]
-		// fmt.Printf("pretempered: %0x (%d)\n", y, mt.index)
-		y = y ^ ((y >> MT_u) & MT_d)
-		y = y ^ ((y << MT_s) & MT_b)
-		y = y ^ ((y << MT_t) & MT_c)
-		y = y ^ (y >> MT_l)
-		mt.index++
-
-		ch <- y
+		ch <- mt.generate()
 	}
 }
 
 // Initialize the state.
-func (mt *mt19937) init(seed uint32) {
-	if mt.initialized {
-		return
-	}
+func (mt *MT19937) init(seed uint32) {
 
+	mt.Seed = seed
 	state := make([]uint32, MT_n)
 	state[0] = seed
 	for i := uint32(1); i < MT_n; i++ {
@@ -515,16 +497,38 @@ func (mt *mt19937) init(seed uint32) {
 	}
 	mt.state = state
 
-	// Point the index to the last element of the state so that
+	// Point the Index to the last element of the state so that
 	// the twist is called before returning any values.
-	mt.index = MT_n
+	mt.Index = MT_n
 
 	// Mark it as initialized.
 	mt.initialized = true
 }
 
+// Return the next random number.
+func (mt *MT19937) generate() uint32 {
+	// Twist if it's time
+	if mt.Index == MT_n {
+		_, err := mt.twist()
+		if err != nil {
+			fmt.Println("ERROR:", err)
+			return 0
+		}
+	}
+
+	// Temper the output
+	y := mt.state[mt.Index]
+	y = y ^ ((y >> MT_u) & MT_d)
+	y = y ^ ((y << MT_s) & MT_b)
+	y = y ^ ((y << MT_t) & MT_c)
+	y = y ^ (y >> MT_l)
+	mt.Index++
+
+	return y
+}
+
 // Populate the state array with a new set of values.
-func (mt *mt19937) twist() (uint32, error) {
+func (mt *MT19937) twist() (uint32, error) {
 	if !mt.initialized {
 		return 0, errors.New("Generator was not seeded")
 	}
@@ -537,34 +541,69 @@ func (mt *mt19937) twist() (uint32, error) {
 		}
 		mt.state[i] = mt.state[(i+MT_m)%MT_n] ^ xA
 	}
-	mt.index = 0
+	mt.Index = 0
 
-	return mt.index, nil
+	return mt.Index, nil
 }
 
+// Allows the state to be set directly rather than generating it from a seed.
 func HackedRandomGen(st []uint32, ch chan uint32) {
-	var mt mt19937
+	var mt MT19937
 	mt.state = st
-	mt.index = MT_n
+	mt.Index = MT_n
 	mt.initialized = true
 
 	for {
-		if mt.index == MT_n {
-			_, err := mt.twist()
-			if err != nil {
-				fmt.Println("ERROR:", err)
-				return
+		ch <- mt.generate()
+	}
+}
+
+// MT implementation that supports reseeding.
+func RandomGenReseed(seed uint32, out, reseed chan uint32) *MT19937 {
+	// Initialization
+	var mt MT19937
+	mt.init(seed)
+	y := mt.generate()
+
+	go func() {
+		for {
+			select {
+			case out <- y:
+				y = mt.generate()
+			case seed = <-reseed:
+				mt.init(seed)
+				y = mt.generate()
 			}
 		}
+	}()
 
-		// temper the output
-		y := mt.state[mt.index]
-		y = y ^ ((y >> MT_u) & MT_d)
-		y = y ^ ((y << MT_s) & MT_b)
-		y = y ^ ((y << MT_t) & MT_c)
-		y = y ^ (y >> MT_l)
-		mt.index++
+	return &mt
+}
 
-		ch <- y
-	}
+// Using MT as a stream cipher that also supports reseeding.
+func MTStreamCipher(seed uint32, reseed chan uint32, out chan byte) {
+	var mt MT19937
+	mt.init(seed)
+	y := mt.generate()
+	c := 0
+	b := byte((y >> uint32(c*8)) & 0x000000FF)
+
+	go func() {
+		for {
+			select {
+			case out <- b:
+				c += 1
+				if c > 3 {
+					y = mt.generate()
+					c = 0
+				}
+				b = byte((y >> uint32(c*8)) & 0x000000FF)
+			case seed = <-reseed:
+				mt.init(seed)
+				y = mt.generate()
+				c = 0
+				b = byte((y >> uint32(c*8)) & 0x000000FF)
+			}
+		}
+	}()
 }

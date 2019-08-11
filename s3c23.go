@@ -12,7 +12,6 @@ func s3c23() {
 
 	ch := make(chan uint32)
 
-	
 	seed := uint32(time.Now().Unix())
 	go cryptopals.RandomGen(seed, ch)
 
@@ -45,7 +44,7 @@ func s3c23() {
 
 	if equal {
 		cryptopals.PrintSuccess("")
-		fmt.Println("Verified 1872 random numbers match between the original and hacked generators.")
+		fmt.Println("  Verified 1872 random numbers match between the original and hacked generators.")
 	} else {
 		cryptopals.PrintFailure("")
 	}

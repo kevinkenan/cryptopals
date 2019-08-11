@@ -38,7 +38,7 @@ func s3c22() {
 
 	if equal {
 		cryptopals.PrintSuccess("")
-		fmt.Println("Found seed", recoveredSeed, "after", k, "trials.")
+		fmt.Println("  Found seed", recoveredSeed, "after", k, "trials.")
 	} else {
 		cryptopals.PrintFailure("")
 	}

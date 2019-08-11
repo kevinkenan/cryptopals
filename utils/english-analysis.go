@@ -64,9 +64,9 @@ func ScoreText(candidate []byte) float64 {
 	diff := 0.0
 	for k, v := range counts {
 		if (0x40 < k && k < 0x5B) || (0x60 < k && k < 0x7B) || k == 0x20 {
-			// Typical characters in english. 
+			// Typical characters in english.
 			diff += math.Abs(letterFreq[k] - float64(v)/float64(size))
-		} else if k >20 || k == 0x9 || k == 0xA || k == 0xD {
+		} else if k > 20 || k == 0x9 || k == 0xA || k == 0xD {
 			// Other possible english characters, including, tabs, line feeds,
 			// and carriage returns. I don't have data on their frequencies,
 			// but I don't want them penalized with the other control
@@ -74,7 +74,7 @@ func ScoreText(candidate []byte) float64 {
 			// algorithm isn't as accurate.
 			diff += .1
 		} else {
-			// Non-printable control characters are penalized. 
+			// Non-printable control characters are penalized.
 			diff += 0.2
 		}
 	}

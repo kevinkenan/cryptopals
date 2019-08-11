@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+
 	// "math/big"
 	"crypto/rand"
 
-	"github.com/kevinkenan/cryptopals/utils"
+	cryptopals "github.com/kevinkenan/cryptopals/utils"
 )
 
 func s2c12() {
@@ -173,9 +174,9 @@ func s2c12() {
 func identicalBytesInWindow(a, b []byte, start, end int) bool {
 	if bytes.Equal(a[start:end], b[start:end]) {
 		return true
-	} else {
-		return false
 	}
+
+	return false
 }
 
 func findMode(o oracle, blockSize int) (string, error) {
