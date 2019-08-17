@@ -20,25 +20,25 @@ func stopTheComplainingAboutFmt() {
 
 func PrintSuccess(s string) {
 	if len(s) != 0 {
-		colorstring.Printf("  [bold][green]Success[reset]: %#v\n", s)
+		_, _ = colorstring.Printf("  [bold][green]Success[reset]: %#v\n", s)
 	} else {
-		colorstring.Println("  [bold][green]Success")
+		_, _ = colorstring.Println("  [bold][green]Success")
 	}
 }
 
 func PrintFailure(s string) {
 	if len(s) != 0 {
-		colorstring.Printf("  [bold][red]Failure[reset]: %#v\n", s)
+		_, _ = colorstring.Printf("  [bold][red]Failure[reset]: %#v\n", s)
 	} else {
-		colorstring.Println("  [bold][red]Failure")
+		_, _ = colorstring.Println("  [bold][red]Failure")
 	}
 }
 
 func PrintError(err error) {
 	if err != nil {
-		colorstring.Printf("  [bold][red]ERROR[reset]: %#s\n", err)
+		_, _ = colorstring.Printf("  [bold][red]ERROR[reset]: %#s\n", err)
 	} else {
-		colorstring.Println("  [bold][red]ERROR")
+		_, _ = colorstring.Println("  [bold][red]ERROR")
 	}
 }
 
@@ -126,7 +126,7 @@ func DetectAESMode(ciphertext []byte) string {
 func Padding(in []byte, size int) []byte {
 	padLen := size - (len(in) % size)
 	padding := make([]byte, padLen)
-	for i, _ := range padding {
+	for i := range padding {
 		padding[i] = byte(padLen)
 	}
 	return append(in, padding...)
@@ -606,4 +606,50 @@ func MTStreamCipher(seed uint32, reseed chan uint32, out chan byte) {
 			}
 		}
 	}()
+}
+
+// EditAESwithCTR encrypts `newtext` and writes it into `intext` starting at
+// position `offset`, growing the slice if necessary. The function returns the
+// modified newtext.
+func EditAESwithCTR(intext, key []byte, offset int, newtext []byte) ([]byte, error) {
+	if offset < 0 {
+		return intext, errors.New("offset can't be negative")
+	}
+
+	if offset > len(intext)-1 {
+		return intext, errors.New("offset longer than input")
+	}
+
+	var err error
+	outtext := make([]byte, len(intext))
+	copy(outtext, intext)
+
+	// Start the keystream which generates the key bytes.
+	keystream := make(chan keyByte)
+	nonce := make([]byte, 8)
+	go keystreamGen(nonce, key, 0, keystream)
+
+	// Position the keystream
+	for i := 0; i < offset; i++ {
+		<-keystream
+	}
+
+	// Ensure that `outtext` is big enough to hold `newtext`.
+	if offset+len(newtext) > len(outtext) {
+		outtext = append(outtext, make([]byte, offset+len(newtext)-len(intext))...)
+	}
+
+	// XOR each byte of newtext with a byte from the keystream and store it in
+	// outtext.
+	for i := 0; i < len(newtext); i++ {
+		p := offset + i
+		k := <-keystream
+		if k.Err != nil {
+			return intext, err
+		}
+
+		outtext[p] = newtext[i] ^ k.Byte
+	}
+
+	return outtext, nil
 }

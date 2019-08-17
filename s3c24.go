@@ -18,7 +18,7 @@ func s3c24() {
 	ascii := cryptopals.GetPrintableASCIIBytes()
 	message := make([]byte, rand.Intn(100))
 
-	for i, _ := range message {
+	for i := range message {
 		message[i] = ascii[rand.Intn(len(ascii))]
 	}
 
@@ -96,13 +96,13 @@ func s3c24() {
 	if bfequal {
 		fmt.Printf("  Found known text '%s' with key 0x%04x\n", string(trialtext[len(message)-len(known):]), foundkey)
 	} else {
-		fmt.Println("Did not find the known text.")
+		fmt.Println("  Did not find the known text.")
 	}
 
 	if tkequal {
 		fmt.Printf("  Found token 0x%x\n", token)
 	} else {
-		fmt.Println("Did not find the token.")
+		fmt.Println("  Did not find the token.")
 	}
 }
 
