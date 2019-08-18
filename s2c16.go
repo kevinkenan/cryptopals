@@ -97,7 +97,7 @@ func s2c16() {
 
 	if isAdmin {
 		s, _ := url.QueryUnescape(string(plaintext))
-		cryptopals.PrintSuccess(fmt.Sprintf("%v...%v", s[:33], s[58:]))
+		cryptopals.PrintSuccess(fmt.Sprintf("%v...", s[:60]))
 	} else {
 		cryptopals.PrintFailure("")
 		cryptopals.PrintHexBlocks(plaintext, 16)
