@@ -181,21 +181,25 @@ func EncryptAESwithCBC(plaintext, iv, key []byte) ([]byte, error) {
 		return nil, err
 	}
 
+	// Make a copy of the plaintext so we don't alter the original.
+	temptext := make([]byte, len(plaintext))
+	copy(temptext, plaintext)
+
 	// Encrypt each block of the plaintext.
-	blockCount := len(plaintext) / aes.BlockSize
+	blockCount := len(temptext) / aes.BlockSize
 	ciphertext := make([]byte, blockCount*aes.BlockSize)
 	cipherBlock := iv
 	for i := 0; i < blockCount; i++ {
 		blockStart := i * aes.BlockSize
 		blockEnd := (i + 1) * aes.BlockSize
 
-		// Mix in the cipherblock by XORing it with the plaintext
-		for i, x := range plaintext[blockStart:blockEnd] {
-			plaintext[blockStart+i] = x ^ cipherBlock[i]
+		// Mix in the cipherblock by XORing it with the temptext
+		for i, x := range temptext[blockStart:blockEnd] {
+			temptext[blockStart+i] = x ^ cipherBlock[i]
 		}
 
 		// Encrypt the block.
-		cipher.Encrypt(ciphertext[blockStart:blockEnd], plaintext[blockStart:blockEnd])
+		cipher.Encrypt(ciphertext[blockStart:blockEnd], temptext[blockStart:blockEnd])
 
 		// The resulting encrypted block is the new cipherblock
 		cipherBlock = ciphertext[blockStart:blockEnd]
