@@ -37,6 +37,6 @@ func s4c28() {
 		return
 	}
 
-	cryptopals.PrintSuccess("MAC resists modifications to the meassage and key.")
+	cryptopals.PrintSuccess("MAC resists modifications to the message and key.")
 
 }
