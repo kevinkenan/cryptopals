@@ -416,6 +416,26 @@ type KeyLengthScore struct {
 	Score     float64
 }
 
+// ValidateASCII returns true if all bytes of `input` are no greater than 0x7F.
+func ValidateASCII(input []byte) (bool, error) {
+	for _, i := range input {
+		if i > 0x7F {
+			return false, &InvalidASCIIError{Text: input}
+		}
+	}
+
+	return true, nil
+}
+
+type InvalidASCIIError struct {
+	Text []byte
+}
+
+// Implement error.Interface.
+func (e InvalidASCIIError) Error() string {
+	return fmt.Sprintf("invalid ascii: %x", e.Text)
+}
+
 type KeyLengthScores []KeyLengthScore
 
 // Functions to implement sort.Interface
@@ -656,4 +676,151 @@ func EditAESwithCTR(intext, key []byte, offset int, newtext []byte) ([]byte, err
 	}
 
 	return outtext, nil
+}
+
+const (
+	chunk = 64
+
+	sha1_h0 = 0x67452301
+	sha1_h1 = 0xEFCDAB89
+	sha1_h2 = 0x98BADCFE
+	sha1_h3 = 0x10325476
+	sha1_h4 = 0xC3D2E1F0
+
+	sha1_k0 = 0x5A827999
+	sha1_k1 = 0x6ED9EBA1
+	sha1_k2 = 0x8F1BBCDC
+	sha1_k3 = 0xCA62C1D6
+)
+
+func SumSHA1(data []byte) (sum [20]byte) {
+	// Create the temp slice which will be summed
+	dataLen := uint64(len(data))
+	temp := make([]byte, dataLen)
+	copy(temp, data)
+	temp = append(temp, 0x80)
+
+	// Add padding.
+	padLen := 64 - ((dataLen + 9) % 64)
+	padding := make([]byte, padLen)
+	temp = append(temp, padding...)
+	lenpad := make([]byte, 8)
+	binary.BigEndian.PutUint64(lenpad, dataLen*8)
+	temp = append(temp, lenpad...)
+
+	//PrintHexBlocks(temp, 8)
+
+	// Compute the checksum bytes.
+	var d digest
+	d.h[0] = sha1_h0
+	d.h[1] = sha1_h1
+	d.h[2] = sha1_h2
+	d.h[3] = sha1_h3
+	d.h[4] = sha1_h4
+	d.processSHA1Blocks(temp)
+
+	// Assemble the checksum
+	putUint32(sum[0:], d.h[0])
+	putUint32(sum[4:], d.h[1])
+	putUint32(sum[8:], d.h[2])
+	putUint32(sum[12:], d.h[3])
+	putUint32(sum[16:], d.h[4])
+
+	return
+}
+
+type digest struct {
+	h [5]uint32
+}
+
+// Compute the SHA-1 blocks. This code is taken from
+// https://golang.org/src/crypto/sha1/sha1block.go
+func (dig *digest) processSHA1Blocks(p []byte) {
+	var w [16]uint32
+
+	h0, h1, h2, h3, h4 := dig.h[0], dig.h[1], dig.h[2], dig.h[3], dig.h[4]
+
+	for len(p) >= chunk {
+		// Can interlace the computation of w with the
+		// rounds below if needed for speed.
+		for i := 0; i < 16; i++ {
+			j := i * 4
+			w[i] = uint32(p[j])<<24 | uint32(p[j+1])<<16 | uint32(p[j+2])<<8 | uint32(p[j+3])
+		}
+
+		a, b, c, d, e := h0, h1, h2, h3, h4
+
+		// Each of the four 20-iteration rounds
+		// differs only in the computation of f and
+		// the choice of K (_K0, _K1, etc).
+		i := 0
+		for ; i < 16; i++ {
+			f := b&c | (^b)&d
+			a5 := a<<5 | a>>(32-5)
+			b30 := b<<30 | b>>(32-30)
+			t := a5 + f + e + w[i&0xf] + sha1_k0
+			a, b, c, d, e = t, a, b30, c, d
+		}
+		for ; i < 20; i++ {
+			tmp := w[(i-3)&0xf] ^ w[(i-8)&0xf] ^ w[(i-14)&0xf] ^ w[(i)&0xf]
+			w[i&0xf] = tmp<<1 | tmp>>(32-1)
+			f := b&c | (^b)&d
+			a5 := a<<5 | a>>(32-5)
+			b30 := b<<30 | b>>(32-30)
+			t := a5 + f + e + w[i&0xf] + sha1_k0
+			a, b, c, d, e = t, a, b30, c, d
+		}
+		for ; i < 40; i++ {
+			tmp := w[(i-3)&0xf] ^ w[(i-8)&0xf] ^ w[(i-14)&0xf] ^ w[(i)&0xf]
+			w[i&0xf] = tmp<<1 | tmp>>(32-1)
+			f := b ^ c ^ d
+			a5 := a<<5 | a>>(32-5)
+			b30 := b<<30 | b>>(32-30)
+			t := a5 + f + e + w[i&0xf] + sha1_k1
+			a, b, c, d, e = t, a, b30, c, d
+		}
+		for ; i < 60; i++ {
+			tmp := w[(i-3)&0xf] ^ w[(i-8)&0xf] ^ w[(i-14)&0xf] ^ w[(i)&0xf]
+			w[i&0xf] = tmp<<1 | tmp>>(32-1)
+			f := ((b | c) & d) | (b & c)
+			a5 := a<<5 | a>>(32-5)
+			b30 := b<<30 | b>>(32-30)
+			t := a5 + f + e + w[i&0xf] + sha1_k2
+			a, b, c, d, e = t, a, b30, c, d
+		}
+		for ; i < 80; i++ {
+			tmp := w[(i-3)&0xf] ^ w[(i-8)&0xf] ^ w[(i-14)&0xf] ^ w[(i)&0xf]
+			w[i&0xf] = tmp<<1 | tmp>>(32-1)
+			f := b ^ c ^ d
+			a5 := a<<5 | a>>(32-5)
+			b30 := b<<30 | b>>(32-30)
+			t := a5 + f + e + w[i&0xf] + sha1_k3
+			a, b, c, d, e = t, a, b30, c, d
+		}
+
+		h0 += a
+		h1 += b
+		h2 += c
+		h3 += d
+		h4 += e
+
+		p = p[chunk:]
+	}
+
+	dig.h[0], dig.h[1], dig.h[2], dig.h[3], dig.h[4] = h0, h1, h2, h3, h4
+}
+
+func putUint32(x []byte, s uint32) {
+	_ = x[3]
+	x[0] = byte(s >> 24)
+	x[1] = byte(s >> 16)
+	x[2] = byte(s >> 8)
+	x[3] = byte(s)
+}
+
+func SHA1HMAC(key, msg []byte) [20]byte {
+	var data []byte
+	data = append(data, key...)
+	data = append(data, msg...)
+	return SumSHA1(data)
 }
