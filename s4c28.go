@@ -19,24 +19,24 @@ func s4c28() {
 	binary.BigEndian.PutUint64(key2, 0x11)
 
 	// Compute the HMAC
-	hmac := cryptopals.SHA1HMAC(key, msg)
+	mac := cryptopals.SHA1MAC(key, msg)
 
 	// Show that a one-character change in the msg creates a different
 	// HMAC sum.
-	hmac_msg2 := cryptopals.SHA1HMAC(key, msg2)
-	if bytes.Equal(hmac[:], hmac_msg2[:]) {
+	mac_msg2 := cryptopals.SHA1MAC(key, msg2)
+	if bytes.Equal(mac[:], mac_msg2[:]) {
 		cryptopals.PrintFailure("HMACs shouldn't match")
 		return
 	}
 
 	// Show that a one-character change in the key creates a different
 	// HMAC sum.
-	hmac_key2 := cryptopals.SHA1HMAC(key, msg2)
-	if bytes.Equal(hmac[:], hmac_key2[:]) {
+	mac_key2 := cryptopals.SHA1MAC(key, msg2)
+	if bytes.Equal(mac[:], mac_key2[:]) {
 		cryptopals.PrintFailure("HMACs shouldn't match")
 		return
 	}
 
-	cryptopals.PrintSuccess("HMAC resists modifications to the meassage and key.")
+	cryptopals.PrintSuccess("MAC resists modifications to the meassage and key.")
 
 }

@@ -818,7 +818,8 @@ func putUint32(x []byte, s uint32) {
 	x[3] = byte(s)
 }
 
-func SHA1HMAC(key, msg []byte) [20]byte {
+// This a a naive and broken MAC.
+func SHA1MAC(key, msg []byte) [20]byte {
 	var data []byte
 	data = append(data, key...)
 	data = append(data, msg...)
