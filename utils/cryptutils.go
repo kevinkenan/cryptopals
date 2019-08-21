@@ -694,24 +694,15 @@ const (
 )
 
 func SumSHA1(data []byte) (sum [20]byte) {
-	// Create the temp slice which will be summed
+	// Copy data into temp and add padding.
 	dataLen := uint64(len(data))
 	temp := make([]byte, dataLen)
 	copy(temp, data)
-	temp = append(temp, 0x80)
-
-	// Add padding.
-	padLen := 64 - ((dataLen + 9) % 64)
-	padding := make([]byte, padLen)
+	padding := GetSHA1Padding(dataLen)
 	temp = append(temp, padding...)
-	lenpad := make([]byte, 8)
-	binary.BigEndian.PutUint64(lenpad, dataLen*8)
-	temp = append(temp, lenpad...)
-
-	//PrintHexBlocks(temp, 8)
 
 	// Compute the checksum bytes.
-	var d digest
+	var d DigestSHA1
 	d.h[0] = sha1_h0
 	d.h[1] = sha1_h1
 	d.h[2] = sha1_h2
@@ -729,13 +720,27 @@ func SumSHA1(data []byte) (sum [20]byte) {
 	return
 }
 
-type digest struct {
+// GetSHA1Padding returns the amount of padding needed for a message that has
+// a length of `dataLen` bytes.
+func GetSHA1Padding(dataLen uint64) (padding []byte) {
+	padding = []byte{0x80}
+	padLen := 64 - ((dataLen + 9) % 64)
+	temp := make([]byte, padLen)
+	padding = append(padding, temp...)
+	lenpad := make([]byte, 8)
+	binary.BigEndian.PutUint64(lenpad, dataLen*8)
+	padding = append(padding, lenpad...)
+
+	return
+}
+
+type DigestSHA1 struct {
 	h [5]uint32
 }
 
 // Compute the SHA-1 blocks. This code is taken from
 // https://golang.org/src/crypto/sha1/sha1block.go
-func (dig *digest) processSHA1Blocks(p []byte) {
+func (dig *DigestSHA1) processSHA1Blocks(p []byte) {
 	var w [16]uint32
 
 	h0, h1, h2, h3, h4 := dig.h[0], dig.h[1], dig.h[2], dig.h[3], dig.h[4]
@@ -818,10 +823,38 @@ func putUint32(x []byte, s uint32) {
 	x[3] = byte(s)
 }
 
-// This a a naive and broken MAC.
-func SHA1MAC(key, msg []byte) [20]byte {
-	var data []byte
-	data = append(data, key...)
-	data = append(data, msg...)
-	return SumSHA1(data)
+// ExtendSHA1MAC implements an extension attack against a simple SHA-1 MAC. The
+// hash of the original message must be provided along with the new message and
+// the original blockLen which is the length of the key plus the original
+// message.
+func ExtendSHA1MAC(hash [20]byte, data []byte, blockLen uint64) (sum [20]byte) {
+	// Copy data into temp and add padding.
+	dataLen := uint64(len(data))
+	temp := make([]byte, dataLen)
+	copy(temp, data)
+	padding := GetSHA1Padding(blockLen + dataLen)
+	temp = append(temp, padding...)
+
+	// Process temp from the point where the original hash stopped.
+	d := createDigestSHA1(hash)
+	d.processSHA1Blocks(temp)
+
+	// Assemble the checksum
+	putUint32(sum[0:], d.h[0])
+	putUint32(sum[4:], d.h[1])
+	putUint32(sum[8:], d.h[2])
+	putUint32(sum[12:], d.h[3])
+	putUint32(sum[16:], d.h[4])
+
+	return
+}
+
+func createDigestSHA1(hash [20]byte) (d DigestSHA1) {
+	d.h[0] = binary.BigEndian.Uint32(hash[:4])
+	d.h[1] = binary.BigEndian.Uint32(hash[4:8])
+	d.h[2] = binary.BigEndian.Uint32(hash[8:12])
+	d.h[3] = binary.BigEndian.Uint32(hash[12:16])
+	d.h[4] = binary.BigEndian.Uint32(hash[16:])
+
+	return
 }
