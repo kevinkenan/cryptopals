@@ -678,6 +678,8 @@ func EditAESwithCTR(intext, key []byte, offset int, newtext []byte) ([]byte, err
 	return outtext, nil
 }
 
+// SHA-1 Implementation
+
 const (
 	chunk = 64
 
@@ -855,6 +857,184 @@ func createDigestSHA1(hash [20]byte) (d DigestSHA1) {
 	d.h[2] = binary.BigEndian.Uint32(hash[8:12])
 	d.h[3] = binary.BigEndian.Uint32(hash[12:16])
 	d.h[4] = binary.BigEndian.Uint32(hash[16:])
+
+	return
+}
+
+// MD4 Implementation
+
+const (
+	md4_h0 = 0x67452301
+	md4_h1 = 0xEFCDAB89
+	md4_h2 = 0x98BADCFE
+	md4_h3 = 0x10325476
+)
+
+func SumMD4(data []byte) (sum [16]byte) {
+	// Copy data into temp and add padding.
+	dataLen := uint64(len(data))
+	temp := make([]byte, dataLen)
+	copy(temp, data)
+	padding := GetMD4Padding(dataLen)
+	temp = append(temp, padding...)
+
+	// Compute the checksum bytes.
+	var d DigestMD4
+	d.h[0] = md4_h0
+	d.h[1] = md4_h1
+	d.h[2] = md4_h2
+	d.h[3] = md4_h3
+	d.processMD4Blocks(temp)
+
+	// Assemble the checksum
+	putUint32R(sum[0:], d.h[0])
+	putUint32R(sum[4:], d.h[1])
+	putUint32R(sum[8:], d.h[2])
+	putUint32R(sum[12:], d.h[3])
+
+	return
+}
+
+// GetMD4Padding returns the amount of padding needed for a message that has
+// a length of `dataLen` bytes.
+func GetMD4Padding(dataLen uint64) (padding []byte) {
+	padding = []byte{0x80}
+	padLen := 64 - ((dataLen + 9) % 64)
+	temp := make([]byte, padLen)
+	padding = append(padding, temp...)
+	lenpad := make([]byte, 8)
+	binary.LittleEndian.PutUint64(lenpad, dataLen*8)
+	padding = append(padding, lenpad...)
+
+	return
+}
+
+func putUint32R(x []byte, s uint32) {
+	_ = x[3]
+	x[3] = byte(s >> 24)
+	x[2] = byte(s >> 16)
+	x[1] = byte(s >> 8)
+	x[0] = byte(s)
+}
+
+type DigestMD4 struct {
+	h [4]uint32
+}
+
+func createDigestMD4(hash [16]byte) (d DigestMD4) {
+	d.h[0] = binary.LittleEndian.Uint32(hash[:4])
+	d.h[1] = binary.LittleEndian.Uint32(hash[4:8])
+	d.h[2] = binary.LittleEndian.Uint32(hash[8:12])
+	d.h[3] = binary.LittleEndian.Uint32(hash[12:16])
+
+	return
+}
+
+// This is taken from
+// https://github.com/golang/crypto/blob/master/md4/md4block.go
+func (dig *DigestMD4) processMD4Blocks(p []byte) {
+	a := dig.h[0]
+	b := dig.h[1]
+	c := dig.h[2]
+	d := dig.h[3]
+	n := 0
+	var X [16]uint32
+
+	var shift1 = []uint{3, 7, 11, 19}
+	var shift2 = []uint{3, 5, 9, 13}
+	var shift3 = []uint{3, 9, 11, 15}
+
+	var xIndex2 = []uint{0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15}
+	var xIndex3 = []uint{0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15}
+
+	for len(p) >= chunk {
+		aa, bb, cc, dd := a, b, c, d
+
+		j := 0
+		for i := 0; i < 16; i++ {
+			X[i] = uint32(p[j]) | uint32(p[j+1])<<8 | uint32(p[j+2])<<16 | uint32(p[j+3])<<24
+			j += 4
+		}
+
+		// If this needs to be made faster in the future,
+		// the usual trick is to unroll each of these
+		// loops by a factor of 4; that lets you replace
+		// the shift[] lookups with constants and,
+		// with suitable variable renaming in each
+		// unrolled body, delete the a, b, c, d = d, a, b, c
+		// (or you can let the optimizer do the renaming).
+		//
+		// The index variables are uint so that % by a power
+		// of two can be optimized easily by a compiler.
+
+		// Round 1.
+		for i := uint(0); i < 16; i++ {
+			x := i
+			s := shift1[i%4]
+			f := ((c ^ d) & b) ^ d
+			a += f + X[x]
+			a = a<<s | a>>(32-s)
+			a, b, c, d = d, a, b, c
+		}
+
+		// Round 2.
+		for i := uint(0); i < 16; i++ {
+			x := xIndex2[i]
+			s := shift2[i%4]
+			g := (b & c) | (b & d) | (c & d)
+			a += g + X[x] + 0x5a827999
+			a = a<<s | a>>(32-s)
+			a, b, c, d = d, a, b, c
+		}
+
+		// Round 3.
+		for i := uint(0); i < 16; i++ {
+			x := xIndex3[i]
+			s := shift3[i%4]
+			h := b ^ c ^ d
+			a += h + X[x] + 0x6ed9eba1
+			a = a<<s | a>>(32-s)
+			a, b, c, d = d, a, b, c
+		}
+
+		a += aa
+		b += bb
+		c += cc
+		d += dd
+
+		p = p[chunk:]
+		n += chunk
+	}
+
+	dig.h[0] = a
+	dig.h[1] = b
+	dig.h[2] = c
+	dig.h[3] = d
+
+	return
+}
+
+// ExtendMD4MAC implements an extension attack against a simple SHA-1 MAC. The
+// hash of the original message must be provided along with the new message and
+// the original blockLen which is the length of the key plus the original
+// message.
+func ExtendMD4MAC(hash [16]byte, data []byte, blockLen uint64) (sum [16]byte) {
+	// Copy data into temp and add padding.
+	dataLen := uint64(len(data))
+	temp := make([]byte, dataLen)
+	copy(temp, data)
+	padding := GetMD4Padding(blockLen + dataLen)
+	temp = append(temp, padding...)
+
+	// Process temp from the point where the original hash stopped.
+	d := createDigestMD4(hash)
+	d.processMD4Blocks(temp)
+
+	// Assemble the checksum
+	putUint32R(sum[0:], d.h[0])
+	putUint32R(sum[4:], d.h[1])
+	putUint32R(sum[8:], d.h[2])
+	putUint32R(sum[12:], d.h[3])
 
 	return
 }
