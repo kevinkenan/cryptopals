@@ -1,8 +1,8 @@
 package cryptopals
 
 import (
-	// "bytes"
 	"crypto/aes"
+	"crypto/sha1"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
@@ -1037,4 +1037,35 @@ func ExtendMD4MAC(hash [16]byte, data []byte, blockLen uint64) (sum [16]byte) {
 	putUint32R(sum[12:], d.h[3])
 
 	return
+}
+
+// HMAC-SHA1
+
+// NewHmacSha1 takes a key and then returns a function that returns the 20-byte
+// SHA1 HMAC using that key with the supplied data.
+func NewHmacSha1(key []byte) func(data []byte) [20]byte {
+	blocksize := 64
+	ipad := make([]byte, blocksize)
+	opad := make([]byte, blocksize)
+
+	if len(key) > blocksize {
+		hkey := sha1.Sum(key)
+		key = hkey[:]
+	}
+
+	copy(ipad, key)
+	for i := range ipad {
+		ipad[i] ^= 0x36
+	}
+
+	copy(opad, key)
+	for i := range opad {
+		opad[i] ^= 0x5c
+	}
+
+	return func(data []byte) [20]byte {
+		i := sha1.Sum(append(ipad, data...))
+		o := append(opad, i[:]...)
+		return sha1.Sum(o)
+	}
 }
