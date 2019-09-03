@@ -118,7 +118,8 @@ func (kex *dhKeyExchange) Encrypt(plaintext []byte) (ciphertext []byte, err erro
 	}
 
 	// Calculate the session key.
-	s := dh(kex.p, kex.Y, kex.x)
+	s := new(big.Int)
+	s.Exp(kex.Y, kex.x, kex.p)
 	ss := sha1.Sum(s.Bytes())
 	key := ss[:16]
 
@@ -145,7 +146,8 @@ func (kex *dhKeyExchange) Decrypt(ciphertext []byte) (plaintext []byte, err erro
 	}
 
 	// Calculate the session key.
-	s := dh(kex.p, kex.Y, kex.x)
+	s := new(big.Int)
+	s.Exp(kex.Y, kex.x, kex.p)
 	ss := sha1.Sum(s.Bytes())
 	key := ss[:16]
 
@@ -179,11 +181,5 @@ func generateSecret() (a *big.Int) {
 	}
 	a = new(big.Int)
 	a.SetBytes(ax)
-	return
-}
-
-func dh(p, A, b *big.Int) (x *big.Int) {
-	x = new(big.Int)
-	x.Exp(A, b, p)
 	return
 }
