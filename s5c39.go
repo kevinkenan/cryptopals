@@ -9,6 +9,7 @@ import (
 
 func s5c39() {
 	fmt.Println("Set 5, Challenge 39")
+	one := big.NewInt(1)
 
 START:
 
@@ -25,8 +26,8 @@ START:
 		return
 	}
 
+	// Compute the RSA parameters.
 	n := mul(p, q)
-	one := big.NewInt(1)
 	et := mul(sub(p, one), sub(q, one))
 	e := big.NewInt(3)
 	d := new(big.Int).ModInverse(e, et)
@@ -38,10 +39,14 @@ START:
 	}
 
 	plaintext := new(big.Int).SetBytes([]byte("test"))
+
+	// Encrypt
 	ciphertext := exp(plaintext, e, n)
 
+	// Decrypt
 	foundtext := exp(ciphertext, d, n)
 
+	// Did it work?
 	if string(foundtext.Bytes()) == "test" {
 		cryptopals.PrintSuccess("RSA encrypted and decrypted successfully")
 	} else {
