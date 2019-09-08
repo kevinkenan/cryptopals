@@ -20,9 +20,10 @@ type srpMITM struct {
 func s5c38() {
 	fmt.Println("Set 5, Challenge 38")
 
-	I := "username"
-	// We assume that the user has selected a simple, guessable password.
+	// This is an offline dictionary attack so we select the password randomly
+	// from a limited dictionary.
 	P := []byte(srpSelectSimplePassword())
+	I := "username"
 
 	srp := srpData{}
 	srp.g = big.NewInt(2)
