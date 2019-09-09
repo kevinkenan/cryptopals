@@ -232,3 +232,7 @@ func mod(a, b *big.Int) *big.Int {
 func exp(a, b, c *big.Int) *big.Int {
 	return new(big.Int).Exp(a, b, c)
 }
+
+func invmod(a, b *big.Int) *big.Int {
+	return new(big.Int).ModInverse(a, b)
+}
