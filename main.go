@@ -38,7 +38,7 @@ func main() {
 	set2 := []func(){s2c9, s2c10, s2c11, s2c12, s2c13, s2c14, s2c15, s2c16}
 	set3 := []func(){s3c17, s3c18, s3c19, s3c20, s3c21, s3c22, s3c23, s3c24}
 	set4 := []func(){s4c25, s4c26, s4c27, s4c28, s4c29, s4c30, s4c31, s4c32}
-	set5 := []func(){s5c33, s5c34, s5c35, s5c36, s5c37, s5c38, s5c39}
+	set5 := []func(){s5c33, s5c34, s5c35, s5c36, s5c37, s5c38, s5c39, s5c40}
 	sets := [][]func(){set1, set2, set3, set4, set5}
 
 	// Execute the challenges specified on the command line. The default go
