@@ -13,7 +13,7 @@ func s5c39() {
 	msg := "test"
 
 	// Initialize an RSA object and use it to encrypt and decrypt.
-	rsa := newSimpleRSA(1024)
+	rsa := newSimpleRSA(1024, 3)
 	ciphertext := rsa.encrypt(msg)
 	foundtext := rsa.decrypt(ciphertext)
 
@@ -36,12 +36,12 @@ type simpleRSA struct {
 	et   *big.Int // Totient used to compute the private key
 }
 
-func newSimpleRSA(bits int) *simpleRSA {
+func newSimpleRSA(bits, e int) *simpleRSA {
 	var err error
 	one := big.NewInt(1)
 	rsa := &simpleRSA{}
 	rsa.b = bits
-	rsa.e = big.NewInt(3)
+	rsa.e = big.NewInt(int64(e))
 
 START:
 	// Generate our first big prime.

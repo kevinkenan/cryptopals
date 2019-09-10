@@ -9,35 +9,42 @@ import (
 
 func s5c40() {
 	fmt.Println("Set 5, Challenge 40")
-
 	msg := "super secret message"
 
-	// Create three RSA objects.
-	rsa1 := newSimpleRSA(1024)
-	rsa2 := newSimpleRSA(1024)
-	rsa3 := newSimpleRSA(1024)
+	// The e component of the public key. The attack needs as many broadcasts as
+	// e, so this code simply uses e for the number of broadcasts to generate.
+	e := 3
 
-	// Get the moduli.
-	m := make([]*big.Int, 3)
-	_, m[0] = rsa1.getPublicKey()
-	_, m[1] = rsa2.getPublicKey()
-	_, m[2] = rsa3.getPublicKey()
+	// Create an RSA object for each broadcast.
+	r := make([]*simpleRSA, e)
+	for i := range r {
+		r[i] = newSimpleRSA(1024, e)
+	}
 
-	// Get the ciphtertexts.
-	a := make([]*big.Int, 3)
-	a[0] = rsa1.encrypt(msg)
-	a[1] = rsa2.encrypt(msg)
-	a[2] = rsa3.encrypt(msg)
+	// Get the public key moduli.
+	m := make([]*big.Int, e)
+	for i := range m {
+		_, m[i] = r[i].getPublicKey()
+	}
+
+	// Get the ciphertexts.
+	a := make([]*big.Int, e)
+	for i := range a {
+		a[i] = r[i].encrypt(msg)
+	}
 
 	// Crack the message using the Chinese remainder theorem.
-	r, _ := crt(a, m)
+	res, _ := crt(a, m)
+	if res == nil {
+		return
+	}
 
-	if string(rootBS(big.NewInt(3), r).Bytes()) == msg {
+	// Did we recover the message?
+	if string(rootBS(big.NewInt(int64(e)), res).Bytes()) == msg {
 		cryptopals.PrintSuccess("e=3 broadcast attack cracked the encrypted message")
 	} else {
 		cryptopals.PrintFailure("Broadcast attack failed")
 	}
-
 }
 
 // crt is an implementation of the Chinese remainder theorem.
@@ -60,7 +67,7 @@ func crt(a, m []*big.Int) (*big.Int, *big.Int) {
 		mp[i] = new(big.Int).Div(mt, v)
 	}
 
-	// Compute the solution.
+	// Compute the solution r.
 	r := big.NewInt(0)
 	for i := range a {
 		t := mul(mul(a[i], mp[i]), invmod(mp[i], m[i]))
