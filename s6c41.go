@@ -12,7 +12,7 @@ import (
 // ciphertext m^e by s^e:
 //     y = s^e * m^e.
 // Then we decrypt y to get r:
-//     r = (s^e * m^e)^d = s^(de) * m^(de) = s^1 * m^1 = s * m,
+//     r = (s^e * m^e)^d = s^(de) * m^(de) = s * m,
 // where d is the private key and also the multiplicative inverse of e. Finally,
 // we simply multiply r by x, the inverse of s,
 //     z = x * r = x * s * m = m,
