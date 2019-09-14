@@ -13,8 +13,8 @@ import (
 //     y = s^e * m^e.
 // Then we decrypt y to get r:
 //     r = (s^e * m^e)^d = s^(de) * m^(de) = s * m,
-// where d is the private key and also the multiplicative inverse of e. Finally,
-// we simply multiply r by x, the inverse of s,
+// where d is the private key and also the multiplicative inverse of e modulo
+// ϕ(N). Finally, we simply multiply r by x, the inverse of s,
 //     z = x * r = x * s * m = m,
 // to get the original message m.
 func s6c41() {
@@ -26,7 +26,7 @@ func s6c41() {
 	e, N := srv.getPublicKey()
 
 	// s can be anything so long as s > 1 mod N. I just picked 12. x is the
-	// multiplicative inverse of s.
+	// multiplicative inverse of s modulo N.
 	s := big.NewInt(12)
 	x := invmod(s, N)
 
