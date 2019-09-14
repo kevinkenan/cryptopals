@@ -95,6 +95,14 @@ func (rsa *simpleRSA) decrypt(ciphertext *big.Int) string {
 	return string(exp(ciphertext, rsa.d, rsa.n).Bytes())
 }
 
+func (rsa *simpleRSA) decryptRaw(ciphertext *big.Int) *big.Int {
+	if rsa.d == nil || rsa.n == nil {
+		cryptopals.PrintError(errors.New("rsa: public key components not set"))
+	}
+
+	return exp(ciphertext, rsa.d, rsa.n)
+}
+
 func (rsa *simpleRSA) getPublicKey() (e *big.Int, n *big.Int) {
 	return rsa.e, rsa.n
 }
