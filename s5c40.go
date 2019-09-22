@@ -40,7 +40,7 @@ func s5c40() {
 	}
 
 	// Did we recover the message?
-	if string(rootBS(big.NewInt(int64(e)), res).Bytes()) == msg {
+	if string(cryptopals.RootBS(big.NewInt(int64(e)), res).Bytes()) == msg {
 		cryptopals.PrintSuccess("e=3 broadcast attack cracked the encrypted message")
 	} else {
 		cryptopals.PrintFailure("Broadcast attack failed")
@@ -76,32 +76,4 @@ func crt(a, m []*big.Int) (*big.Int, *big.Int) {
 	r.Mod(r, mt)
 
 	return r, mt
-}
-
-// Simple binary search to find roots. It returns the largest integer a such
-// that a^N ≤ A.
-func rootBS(N, A *big.Int) (m *big.Int) {
-	one := big.NewInt(1)
-	two := big.NewInt(2)
-
-	L, R, a, m := new(big.Int), new(big.Int), new(big.Int), new(big.Int)
-	R.Sub(A, one)
-
-BS:
-	m.Quo(add(L, R), two)
-	if L.Cmp(R) > 0 {
-		return
-	}
-	a.Exp(m, N, nil)
-
-	switch a.Cmp(A) {
-	case -1:
-		L.Add(m, one)
-		goto BS
-	case 1:
-		R.Sub(m, one)
-		goto BS
-	}
-
-	return
 }

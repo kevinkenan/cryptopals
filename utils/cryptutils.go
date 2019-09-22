@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/mitchellh/colorstring"
 	"math"
+	"math/big"
 	"math/bits"
 	"sort"
 )
@@ -1068,4 +1069,32 @@ func NewHmacSha1(key []byte) func(data []byte) [20]byte {
 		o := append(opad, i[:]...)
 		return sha1.Sum(o)
 	}
+}
+
+// Simple binary search to find roots. It returns the largest integer a such
+// that a^N ≤ A.
+func RootBS(N, A *big.Int) (m *big.Int) {
+	one := big.NewInt(1)
+	two := big.NewInt(2)
+
+	L, R, a, m := new(big.Int), new(big.Int), new(big.Int), new(big.Int)
+	R.Sub(A, one)
+
+BS:
+	m.Quo(new(big.Int).Add(L, R), two)
+	if L.Cmp(R) > 0 {
+		return
+	}
+	a.Exp(m, N, nil)
+
+	switch a.Cmp(A) {
+	case -1:
+		L.Add(m, one)
+		goto BS
+	case 1:
+		R.Sub(m, one)
+		goto BS
+	}
+
+	return
 }
